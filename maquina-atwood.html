@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maquina de Atwood - Simulacion Interactiva</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg: #0a0d12;
+      --bg-secondary: #12171f;
+      --fg: #e8eaed;
+      --muted: #6b7280;
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.4);
+      --card: #1a1f2a;
+      --border: #2a3140;
+      --metal-light: #c4c9d1;
+      --metal-dark: #3d4452;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .title-font {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .glass-panel {
+      background: linear-gradient(135deg, rgba(26, 31, 42, 0.9), rgba(18, 23, 31, 0.95));
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .control-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      background: linear-gradient(90deg, var(--border), var(--metal-dark));
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .control-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(145deg, var(--accent), #d97706);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 20px var(--accent-glow), 0 4px 8px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .control-input::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 30px var(--accent-glow), 0 6px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .control-input::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(145deg, var(--accent), #d97706);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .btn-primary {
+      background: linear-gradient(145deg, var(--accent), #d97706);
+      color: #000;
+      font-weight: 600;
+      padding: 12px 32px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--accent-glow);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--fg);
+      font-weight: 500;
+      padding: 12px 32px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'IBM Plex Sans', sans-serif;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .value-display {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .stat-card {
+      background: linear-gradient(145deg, rgba(42, 49, 64, 0.5), rgba(26, 31, 42, 0.8));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    #canvas-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 4/5;
+      margin: 0 auto;
+    }
+
+    #simulationCanvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+    }
+
+    .glow-ring {
+      position: absolute;
+      top: 12%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      background: radial-gradient(circle at center, transparent 40%, var(--accent-glow) 100%);
+      pointer-events: none;
+      opacity: 0.6;
+      animation: pulse-ring 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-ring {
+
+      0%,
+      100% {
+        opacity: 0.4;
+        transform: translateX(-50%) scale(1);
+      }
+
+      50% {
+        opacity: 0.7;
+        transform: translateX(-50%) scale(1.1);
+      }
+    }
+
+    .background-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(245, 158, 11, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245, 158, 11, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .ambient-glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(150px);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .ambient-glow-1 {
+      top: -200px;
+      right: -200px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.15), transparent 70%);
+    }
+
+    .ambient-glow-2 {
+      bottom: -200px;
+      left: -200px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.1), transparent 70%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .fade-in-delay-1 {
+      animation-delay: 0.1s;
+    }
+
+    .fade-in-delay-2 {
+      animation-delay: 0.2s;
+    }
+
+    .fade-in-delay-3 {
+      animation-delay: 0.3s;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="background-grid"></div>
+  <div class="ambient-glow ambient-glow-1"></div>
+  <div class="ambient-glow ambient-glow-2"></div>
+
+  <div class="min-h-screen p-4 md:p-8">
+    <header class="text-center mb-8 fade-in">
+      <h1 class="title-font text-3xl md:text-5xl font-black mb-3 tracking-wider" style="color: var(--fg);">
+        MAQUINA DE ATWOOD
+      </h1>
+      <p class="text-lg md:text-xl" style="color: var(--muted);">
+        Simulacion interactiva de dinamica rotational
+      </p>
+    </header>
+
+    <div class="max-w-7xl mx-auto grid lg:grid-cols-3 gap-6">
+      <!-- Panel de Control Izquierdo -->
+      <div class="glass-panel p-6 fade-in fade-in-delay-1">
+        <h2 class="title-font text-xl font-bold mb-6 flex items-center gap-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 1v6m0 6v10M1 12h6m6 0h10" />
+          </svg>
+          Controles
+        </h2>
+
+        <!-- Masa 1 -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-3">
+            <label class="font-medium">Masa 1 (izquierda)</label>
+            <span id="mass1Value" class="value-display">5.0 kg</span>
+          </div>
+          <input type="range" id="mass1" class="control-input" min="1" max="20" step="0.1" value="5">
+        </div>
+
+        <!-- Masa 2 -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-3">
+            <label class="font-medium">Masa 2 (derecha)</label>
+            <span id="mass2Value" class="value-display">3.0 kg</span>
+          </div>
+          <input type="range" id="mass2" class="control-input" min="1" max="20" step="0.1" value="3">
+        </div>
+
+        <!-- Gravedad -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-3">
+            <label class="font-medium">Gravedad</label>
+            <span id="gravityValue" class="value-display">9.81 m/s²</span>
+          </div>
+          <input type="range" id="gravity" class="control-input" min="1" max="20" step="0.1" value="9.81">
+        </div>
+
+        <!-- Longitud de Cuerda (NUEVO) -->
+        <div class="mb-8">
+          <div class="flex justify-between items-center mb-3">
+            <label class="font-medium">Longitud de Cuerda</label>
+            <span id="ropeLengthValue" class="value-display">150 px</span>
+          </div>
+          <input type="range" id="ropeLength" class="control-input" min="80" max="300" step="10" value="150">
+        </div>
+
+        <!-- Botones -->
+        <div class="flex gap-3 mt-6">
+          <button id="startBtn" class="btn-primary flex-1">Iniciar</button>
+          <button id="resetBtn" class="btn-secondary flex-1">Reset</button>
+        </div>
+      </div>
+
+      <!-- Canvas de Simulación -->
+      <div class="lg:col-span-1 fade-in fade-in-delay-2">
+        <div id="canvas-container" class="glass-panel p-4 relative">
+          <div class="glow-ring"></div>
+          <canvas id="simulationCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Panel de Resultados Derecho -->
+      <div class="glass-panel p-6 fade-in fade-in-delay-3">
+        <h2 class="title-font text-xl font-bold mb-6 flex items-center gap-3">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+          Resultados
+        </h2>
+
+        <div class="space-y-4">
+          <div class="stat-card">
+            <p class="text-sm mb-1" style="color: var(--muted);">Aceleracion del sistema</p>
+            <p id="accelerationResult" class="title-font text-2xl font-bold" style="color: var(--accent);">2.45 m/s²</p>
+          </div>
+
+          <div class="stat-card">
+            <p class="text-sm mb-1" style="color: var(--muted);">Tension en la cuerda</p>
+            <p id="tensionResult" class="title-font text-2xl font-bold" style="color: var(--accent);">36.79 N</p>
+          </div>
+
+          <div class="stat-card">
+            <p class="text-sm mb-1" style="color: var(--muted);">Velocidad actual</p>
+            <p id="velocityResult" class="title-font text-2xl font-bold" style="color: var(--accent);">0.00 m/s</p>
+          </div>
+
+          <div class="stat-card">
+            <p class="text-sm mb-1" style="color: var(--muted);">Desplazamiento</p>
+            <p id="displacementResult" class="title-font text-2xl font-bold" style="color: var(--accent);">0.00 m</p>
+          </div>
+        </div>
+
+        <!-- Fórmulas -->
+        <div class="mt-8 p-4 rounded-xl" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2);">
+          <h3 class="title-font text-sm font-bold mb-3" style="color: var(--accent);">Formulas aplicadas</h3>
+          <div class="space-y-2 text-sm" style="color: var(--muted);">
+            <p>a = |m₁ - m₂| × g / (m₁ + m₂)</p>
+            <p>T = 2 × m₁ × m₂ × g / (m₁ + m₂)</p>
+          </div>
+        </div>
+
+        <!-- Indicador de movimiento -->
+        <div class="mt-6 p-4 rounded-xl" style="background: var(--bg-secondary);">
+          <p class="text-sm mb-2" style="color: var(--muted);">Direccion del movimiento</p>
+          <div id="directionIndicator" class="flex items-center justify-center gap-4">
+            <span id="mass1Arrow" class="text-2xl opacity-50">↓</span>
+            <span class="text-sm" style="color: var(--muted);">vs</span>
+            <span id="mass2Arrow" class="text-2xl opacity-50">↓</span>
+          </div>
+          <p id="directionText" class="text-center text-sm mt-2" style="color: var(--muted);">Masa 1 desciende</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ INICIALIZACION DE VARIABLES ============
+    const canvas = document.getElementById('simulationCanvas');
+    const ctx = canvas.getContext('2d');
+    // Elementos del DOM
+    const mass1Input = document.getElementById('mass1');
+    const mass2Input = document.getElementById('mass2');
+    const gravityInput = document.getElementById('gravity');
+    const ropeLengthInput = document.getElementById('ropeLength'); // NUEVO
+    const mass1Value = document.getElementById('mass1Value');
+    const mass2Value = document.getElementById('mass2Value');
+    const gravityValue = document.getElementById('gravityValue');
+    const ropeLengthValue = document.getElementById('ropeLengthValue'); // NUEVO
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    // Resultados
+    const accelerationResult = document.getElementById('accelerationResult');
+    const tensionResult = document.getElementById('tensionResult');
+    const velocityResult = document.getElementById('velocityResult');
+    const displacementResult = document.getElementById('displacementResult');
+    const directionText = document.getElementById('directionText');
+    const mass1Arrow = document.getElementById('mass1Arrow');
+    const mass2Arrow = document.getElementById('mass2Arrow');
+    // Variables de simulacion
+    let isRunning = false;
+    let animationId = null;
+    let pulleyAngle = 0;
+    let velocity = 0;
+    let displacement = 0;
+    let lastTime = 0;
+    // Constantes de visualizacion
+    const PULLEY_RADIUS = 60;
+    const ROPE_WIDTH = 6;
+    const MASS_WIDTH = 70;
+    const MASS_HEIGHT_FACTOR = 4;
+    // Colores
+    const COLORS = {
+      pulleyOuter: '#4a5568',
+      pulleyInner: '#2d3748',
+      pulleyHighlight: '#718096',
+      pulleyAccent: '#f59e0b',
+      rope: '#8b7355',
+      ropeHighlight: '#a89070',
+      mass1: '#ef4444',
+      mass2: '#3b82f6',
+      massHighlight: 'rgba(255,255,255,0.3)',
+      background: '#0a0d12',
+      grid: 'rgba(245, 158, 11, 0.05)'
+    };
+    // ============ CONFIGURACION DEL CANVAS ============
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    // ============ FUNCIONES DE FISICA ============
+    function calculatePhysics() {
+      const m1 = parseFloat(mass1Input.value);
+      const m2 = parseFloat(mass2Input.value);
+      const g = parseFloat(gravityInput.value);
+      const acceleration = Math.abs(m1 - m2) * g / (m1 + m2);
+      const tension = 2 * m1 * m2 * g / (m1 + m2);
+      return {
+        acceleration,
+        tension,
+        m1,
+        m2,
+        g
+      };
+    }
+
+    function updateResults() {
+      const physics = calculatePhysics();
+      accelerationResult.textContent = physics.acceleration.toFixed(3) + ' m/s²';
+      tensionResult.textContent = physics.tension.toFixed(2) + ' N';
+      velocityResult.textContent = Math.abs(velocity).toFixed(2) + ' m/s';
+      displacementResult.textContent = Math.abs(displacement).toFixed(3) + ' m';
+      // Actualizar direccion
+      if (physics.m1 > physics.m2) {
+        directionText.textContent = 'Masa 1 desciende';
+        mass1Arrow.style.opacity = '1';
+        mass2Arrow.style.opacity = '0.3';
+        mass1Arrow.textContent = '↓';
+        mass2Arrow.textContent = '↑';
+      } else if (physics.m2 > physics.m1) {
+        directionText.textContent = 'Masa 2 desciende';
+        mass2Arrow.style.opacity = '1';
+        mass1Arrow.style.opacity = '0.3';
+        mass2Arrow.textContent = '↓';
+        mass1Arrow.textContent = '↑';
+      } else {
+        directionText.textContent = 'Equilibrio';
+        mass1Arrow.style.opacity = '0.5';
+        mass2Arrow.style.opacity = '0.5';
+        mass1Arrow.textContent = '—';
+        mass2Arrow.textContent = '—';
+      }
+    }
+    // ============ FUNCIONES DE DIBUJO ============
+    function drawBackground() {
+      const w = canvas.width / window.devicePixelRatio;
+      const h = canvas.height / window.devicePixelRatio;
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+      bgGrad.addColorStop(0, '#0f1318');
+      bgGrad.addColorStop(1, '#0a0d12');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = COLORS.grid;
+      ctx.lineWidth = 1;
+      for (let x = 0; x < w; x += 30) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y < h; y += 30) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawPulleySupport(centerX, y) {
+      ctx.fillStyle = '#2d3748';
+      ctx.fillRect(centerX - 80, 0, 160, y - PULLEY_RADIUS + 10);
+      ctx.fillStyle = '#4a5568';
+      ctx.fillRect(centerX - 70, 10, 140, 20);
+      ctx.fillRect(centerX - 60, 35, 120, 15);
+      ctx.fillStyle = '#718096';
+      for (let i = -50; i <= 50; i += 50) {
+        ctx.beginPath();
+        ctx.arc(centerX + i, 45, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const barGrad = ctx.createLinearGradient(centerX - 100, 0, centerX + 100, 0);
+      barGrad.addColorStop(0, '#4a5568');
+      barGrad.addColorStop(0.5, '#718096');
+      barGrad.addColorStop(1, '#4a5568');
+      ctx.fillStyle = barGrad;
+      ctx.fillRect(centerX - 100, y - PULLEY_RADIUS - 20, 200, 25);
+    }
+
+    function drawPulley(centerX, centerY) {
+      ctx.beginPath();
+      ctx.arc(centerX + 5, centerY + 5, PULLEY_RADIUS + 10, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, PULLEY_RADIUS + 8, 0, Math.PI * 2);
+      const outerGrad = ctx.createRadialGradient(centerX - 20, centerY - 20, 0, centerX, centerY, PULLEY_RADIUS + 8);
+      outerGrad.addColorStop(0, '#5a6577');
+      outerGrad.addColorStop(0.5, '#3d4452');
+      outerGrad.addColorStop(1, '#2d333d');
+      ctx.fillStyle = outerGrad;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, PULLEY_RADIUS, 0, Math.PI * 2);
+      ctx.strokeStyle = '#1a1f2a';
+      ctx.lineWidth = ROPE_WIDTH + 4;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, PULLEY_RADIUS - 8, 0, Math.PI * 2);
+      const bodyGrad = ctx.createRadialGradient(centerX - 15, centerY - 15, 0, centerX, centerY, PULLEY_RADIUS - 8);
+      bodyGrad.addColorStop(0, '#8492a6');
+      bodyGrad.addColorStop(0.3, '#5a6577');
+      bodyGrad.addColorStop(0.7, '#3d4452');
+      bodyGrad.addColorStop(1, '#2d333d');
+      ctx.fillStyle = bodyGrad;
+      ctx.fill();
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(pulleyAngle);
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(15 * Math.cos(angle), 15 * Math.sin(angle));
+        ctx.lineTo((PULLEY_RADIUS - 12) * Math.cos(angle), (PULLEY_RADIUS - 12) * Math.sin(angle));
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 25, 0, Math.PI * 2);
+      const innerRingGrad = ctx.createRadialGradient(centerX - 5, centerY - 5, 0, centerX, centerY, 25);
+      innerRingGrad.addColorStop(0, '#f59e0b');
+      innerRingGrad.addColorStop(0.5, '#d97706');
+      innerRingGrad.addColorStop(1, '#92400e');
+      ctx.fillStyle = innerRingGrad;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 12, 0, Math.PI * 2);
+      const axleGrad = ctx.createRadialGradient(centerX - 3, centerY - 3, 0, centerX, centerY, 12);
+      axleGrad.addColorStop(0, '#a0aec0');
+      axleGrad.addColorStop(0.5, '#718096');
+      axleGrad.addColorStop(1, '#4a5568');
+      ctx.fillStyle = axleGrad;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(centerX - 3, centerY - 3, 4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(centerX - 15, centerY - 25, 8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.fill();
+    }
+
+    function drawRope(centerX, centerY, leftY, rightY) {
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.lineWidth = ROPE_WIDTH + 2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(centerX - PULLEY_RADIUS + 3, centerY + 3);
+      ctx.lineTo(centerX - PULLEY_RADIUS + 3, leftY + 3);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(centerX + PULLEY_RADIUS + 3, centerY + 3);
+      ctx.lineTo(centerX + PULLEY_RADIUS + 3, rightY + 3);
+      ctx.stroke();
+      const ropeGradLeft = ctx.createLinearGradient(centerX - PULLEY_RADIUS - 10, 0, centerX - PULLEY_RADIUS + 10, 0);
+      ropeGradLeft.addColorStop(0, '#5a4a3a');
+      ropeGradLeft.addColorStop(0.3, '#8b7355');
+      ropeGradLeft.addColorStop(0.5, '#a89070');
+      ropeGradLeft.addColorStop(0.7, '#8b7355');
+      ropeGradLeft.addColorStop(1, '#5a4a3a');
+      ctx.strokeStyle = ropeGradLeft;
+      ctx.lineWidth = ROPE_WIDTH;
+      ctx.beginPath();
+      ctx.moveTo(centerX - PULLEY_RADIUS, centerY);
+      ctx.lineTo(centerX - PULLEY_RADIUS, leftY);
+      ctx.stroke();
+      const ropeGradRight = ctx.createLinearGradient(centerX + PULLEY_RADIUS - 10, 0, centerX + PULLEY_RADIUS + 10, 0);
+      ropeGradRight.addColorStop(0, '#5a4a3a');
+      ropeGradRight.addColorStop(0.3, '#8b7355');
+      ropeGradRight.addColorStop(0.5, '#a89070');
+      ropeGradRight.addColorStop(0.7, '#8b7355');
+      ropeGradRight.addColorStop(1, '#5a4a3a');
+      ctx.strokeStyle = ropeGradRight;
+      ctx.beginPath();
+      ctx.moveTo(centerX + PULLEY_RADIUS, centerY);
+      ctx.lineTo(centerX + PULLEY_RADIUS, rightY);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.lineWidth = 1;
+      for (let y = centerY + 20; y < leftY - 20; y += 15) {
+        ctx.beginPath();
+        ctx.moveTo(centerX - PULLEY_RADIUS - 2, y);
+        ctx.lineTo(centerX - PULLEY_RADIUS + 2, y + 5);
+        ctx.stroke();
+      }
+      for (let y = centerY + 20; y < rightY - 20; y += 15) {
+        ctx.beginPath();
+        ctx.moveTo(centerX + PULLEY_RADIUS - 2, y);
+        ctx.lineTo(centerX + PULLEY_RADIUS + 2, y + 5);
+        ctx.stroke();
+      }
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, PULLEY_RADIUS, Math.PI, 0, true);
+      ctx.strokeStyle = '#8b7355';
+      ctx.lineWidth = ROPE_WIDTH;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, PULLEY_RADIUS, Math.PI * 1.2, Math.PI * 1.8);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawMass(x, y, mass, color, baseColor, label) {
+      const height = 40 + mass * MASS_HEIGHT_FACTOR;
+      const width = MASS_WIDTH;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.fillRect(x - width / 2 + 5, y + 5, width, height);
+      const massGrad = ctx.createLinearGradient(x - width / 2, y, x + width / 2, y);
+      massGrad.addColorStop(0, baseColor);
+      massGrad.addColorStop(0.3, color);
+      massGrad.addColorStop(0.7, color);
+      massGrad.addColorStop(1, baseColor);
+      ctx.fillStyle = massGrad;
+      ctx.beginPath();
+      ctx.roundRect(x - width / 2, y, width, height, 8);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.beginPath();
+      ctx.roundRect(x - width / 2 + 5, y + 5, width - 10, 15, 4);
+      ctx.fill();
+      ctx.fillStyle = '#4a5568';
+      ctx.beginPath();
+      ctx.arc(x, y - 5, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#718096';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x, y - 5, 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px "Orbitron", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, x, y + height / 2);
+      ctx.font = '11px "IBM Plex Sans", sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.fillText(mass.toFixed(1) + ' kg', x, y + height / 2 + 18);
+      return height;
+    }
+
+    function draw() {
+      const w = canvas.width / window.devicePixelRatio;
+      const h = canvas.height / window.devicePixelRatio;
+      const centerX = w / 2;
+      const pulleyY = h * 0.22;
+      const m1 = parseFloat(mass1Input.value);
+      const m2 = parseFloat(mass2Input.value);
+      const maxOffset = 80;
+      const offset1 = Math.max(-maxOffset, Math.min(maxOffset, displacement * 50));
+      const offset2 = -offset1;
+      ctx.clearRect(0, 0, w, h);
+      drawBackground();
+      drawPulleySupport(centerX, pulleyY);
+      // AQUI SE USA EL VALOR DEL SLIDER DE LONGITUD
+      const ropeLength = parseInt(ropeLengthInput.value);
+      const baseY = pulleyY + PULLEY_RADIUS + ropeLength;
+      const mass1Y = baseY + offset1;
+      const mass2Y = baseY + offset2;
+      drawRope(centerX, pulleyY, mass1Y - 10, mass2Y - 10);
+      drawPulley(centerX, pulleyY);
+      const mass1Height = drawMass(centerX - PULLEY_RADIUS, mass1Y, m1, COLORS.mass1, '#991b1b', 'M1');
+      const mass2Height = drawMass(centerX + PULLEY_RADIUS, mass2Y, m2, COLORS.mass2, '#1e40af', 'M2');
+      if (isRunning || velocity !== 0) {
+        const arrowLength = Math.min(50, Math.abs(velocity) * 20 + 20);
+        const dir1 = m1 > m2 ? 1 : -1;
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.moveTo(centerX - PULLEY_RADIUS, mass1Y + mass1Height + 10 + (dir1 > 0 ? arrowLength : 0));
+        ctx.lineTo(centerX - PULLEY_RADIUS - 10, mass1Y + mass1Height + 10 + (dir1 > 0 ? arrowLength - 15 : 15));
+        ctx.lineTo(centerX - PULLEY_RADIUS + 10, mass1Y + mass1Height + 10 + (dir1 > 0 ? arrowLength - 15 : 15));
+        ctx.fill();
+        const dir2 = m2 > m1 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(centerX + PULLEY_RADIUS, mass2Y + mass2Height + 10 + (dir2 > 0 ? arrowLength : 0));
+        ctx.lineTo(centerX + PULLEY_RADIUS - 10, mass2Y + mass2Height + 10 + (dir2 > 0 ? arrowLength - 15 : 15));
+        ctx.lineTo(centerX + PULLEY_RADIUS + 10, mass2Y + mass2Height + 10 + (dir2 > 0 ? arrowLength - 15 : 15));
+        ctx.fill();
+      }
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.font = '12px "IBM Plex Sans", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(isRunning ? 'Simulacion en curso...' : 'Simulacion pausada', 15, h - 15);
+    }
+    // ============ ANIMACION (CORREGIDA) ============
+    function animate(currentTime) {
+      if (!lastTime) lastTime = currentTime;
+      const deltaTime = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+      if (isRunning) {
+        const physics = calculatePhysics();
+        const direction = physics.m1 > physics.m2 ? 1 : -1;
+        // Actualizar velocidad y posicion
+        velocity += physics.acceleration * direction * deltaTime;
+        displacement += velocity * deltaTime;
+        // Limitar desplazamiento
+        const maxDisplacement = 1.5;
+        if (Math.abs(displacement) >= maxDisplacement) {
+          displacement = Math.sign(displacement) * maxDisplacement;
+          velocity = 0;
+          isRunning = false;
+          startBtn.textContent = 'Iniciar';
+        }
+        // CORRECCION DEL GIRO DE LA POLEA
+        // Se elimino la multiplicacion por 'direction' para que gire correctamente
+        // segun el signo de la velocidad (positivo o negativo).
+        const pulleyCircumference = 2 * Math.PI * PULLEY_RADIUS;
+        pulleyAngle -= (velocity * deltaTime * 50 / pulleyCircumference) * Math.PI * 2;
+      }
+      updateResults();
+      draw();
+      animationId = requestAnimationFrame(animate);
+    }
+    // ============ EVENT LISTENERS ============
+    mass1Input.addEventListener('input', () => {
+      mass1Value.textContent = parseFloat(mass1Input.value).toFixed(1) + ' kg';
+      updateResults();
+      draw();
+    });
+    mass2Input.addEventListener('input', () => {
+      mass2Value.textContent = parseFloat(mass2Input.value).toFixed(1) + ' kg';
+      updateResults();
+      draw();
+    });
+    gravityInput.addEventListener('input', () => {
+      gravityValue.textContent = parseFloat(gravityInput.value).toFixed(2) + ' m/s²';
+      updateResults();
+      draw();
+    });
+    // NUEVO EVENTO PARA LONGITUD DE CUERDA
+    ropeLengthInput.addEventListener('input', () => {
+      ropeLengthValue.textContent = ropeLengthInput.value + ' px';
+      draw();
+    });
+    startBtn.addEventListener('click', () => {
+      const physics = calculatePhysics();
+      if (Math.abs(physics.m1 - physics.m2) < 0.01) {
+        return;
+      }
+      isRunning = !isRunning;
+      startBtn.textContent = isRunning ? 'Pausar' : 'Iniciar';
+    });
+    resetBtn.addEventListener('click', () => {
+      isRunning = false;
+      velocity = 0;
+      displacement = 0;
+      pulleyAngle = 0;
+      lastTime = 0;
+      startBtn.textContent = 'Iniciar';
+      updateResults();
+      draw();
+    });
+    // ============ INICIALIZACION ============
+    updateResults();
+    animationId = requestAnimationFrame(animate);
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      draw();
+    });
+  </script>
+</body>
+
+</html>
