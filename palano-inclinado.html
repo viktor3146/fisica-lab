@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plano Inclinado — FísicaLab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    ::selection { background: #E0E7FF; color: #3730A3; }
+    html { scroll-behavior: smooth; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #fff; }
+    ::-webkit-scrollbar-thumb { background: #C7D2FE; border-radius: 99px; }
+    .mobile-menu { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+    .mobile-menu.open { max-height: 500px; }
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: -2px; left: 0;
+      width: 0; height: 2px; background: #4F46E5;
+      border-radius: 99px; transition: width 0.25s ease;
+    }
+    .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+
+    canvas { display: block; width: 100%; border-radius: 16px; }
+
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      height: 6px; border-radius: 99px; background: #E2E8F0;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #4F46E5; cursor: pointer; border: 2px solid white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+  <!-- TOP BAR -->
+  <div class="bg-slate-900 text-white text-xs py-1.5 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <span class="text-slate-400">Simulación interactiva</span>
+      <a href="index.html" class="hover:text-indigo-300 transition-colors">← Volver al sitio</a>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-between h-16">
+        <a href="index.html" class="flex items-center gap-2.5 group">
+          <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
+            <i data-lucide="atom" class="w-5 h-5 text-white"></i>
+          </div>
+          <span class="text-lg font-semibold text-slate-900 tracking-tight">FísicaLab</span>
+        </a>
+        <nav class="hidden md:flex items-center gap-1">
+          <a href="index.html" class="nav-link px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-slate-50">Inicio</a>
+          <a href="cinematica.html" class="nav-link px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-slate-50">Cinemática</a>
+          <a href="dinamica.html" class="nav-link active px-3 py-2 text-sm font-medium text-slate-900 hover:text-indigo-600 rounded-lg hover:bg-slate-50">Dinámica</a>
+          <a href="maquina-atwood.html" class="nav-link px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-slate-50 flex items-center gap-1.5">
+            Máquina de Atwood <i data-lucide="external-link" class="w-3 h-3"></i>
+          </a>
+        </nav>
+        <button id="menuToggle" class="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors">
+          <i data-lucide="menu" class="w-5 h-5 text-slate-700"></i>
+        </button>
+      </div>
+      <div id="mobileMenu" class="mobile-menu md:hidden border-t border-slate-100">
+        <nav class="py-3 space-y-1">
+          <a href="index.html" class="block px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg">Inicio</a>
+          <a href="cinematica.html" class="block px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg">Cinemática</a>
+          <a href="dinamica.html" class="block px-3 py-2.5 text-sm font-medium text-slate-900 hover:bg-slate-50 rounded-lg">Dinámica</a>
+          <a href="maquina-atwood.html" class="block px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg">Máquina de Atwood →</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- BREADCRUMB -->
+  <div class="bg-white border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5">
+      <div class="flex items-center text-xs text-slate-400">
+        <span class="after:content-['/'] after:mx-2"><a href="index.html" class="hover:text-indigo-600 transition-colors">FísicaLab</a></span>
+        <span class="after:content-['/'] after:mx-2"><a href="dinamica.html" class="hover:text-indigo-600 transition-colors">Dinámica</a></span>
+        <span class="text-slate-700 font-medium">Plano Inclinado</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIMULATION -->
+  <main class="bg-slate-50 py-8 lg:py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <!-- Title -->
+      <div class="mb-8">
+        <h1 class="text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight">Plano Inclinado</h1>
+        <p class="text-slate-500 mt-2">Ajustá los parámetros y observá cómo cambian las fuerzas y el movimiento del bloque.</p>
+      </div>
+
+      <div class="grid lg:grid-cols-[1fr_340px] gap-6">
+        <!-- Canvas -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
+          <canvas id="simCanvas" height="500"></canvas>
+        </div>
+
+        <!-- Controls -->
+        <div class="space-y-4">
+          <!-- Controles -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-slate-900 mb-4">Parámetros</h3>
+
+            <div class="space-y-5">
+              <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                  <span class="text-slate-600">Ángulo (θ)</span>
+                  <span class="font-mono font-semibold text-slate-900" id="angleVal">30°</span>
+                </div>
+                <input type="range" id="angleSlider" min="0" max="80" value="30" class="w-full">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                  <span class="text-slate-600">Masa (m)</span>
+                  <span class="font-mono font-semibold text-slate-900" id="massVal">5 kg</span>
+                </div>
+                <input type="range" id="massSlider" min="1" max="20" value="5" step="0.5" class="w-full">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                  <span class="text-slate-600">μ<sub>e</sub> (estático)</span>
+                  <span class="font-mono font-semibold text-slate-900" id="muEVal">0.40</span>
+                </div>
+                <input type="range" id="muESlider" min="0" max="1.5" value="0.40" step="0.01" class="w-full">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                  <span class="text-slate-600">μ<sub>c</sub> (cinético)</span>
+                  <span class="font-mono font-semibold text-slate-900" id="muCVal">0.30</span>
+                </div>
+                <input type="range" id="muCSlider" min="0" max="1.5" value="0.30" step="0.01" class="w-full">
+              </div>
+            </div>
+          </div>
+
+          <!-- Resultados -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-slate-900 mb-4">Resultados</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-slate-500">Peso</span>
+                <span class="font-mono font-semibold text-slate-900" id="resWeight">50.0 N</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-slate-500">Normal</span>
+                <span class="font-mono font-semibold text-slate-900" id="resNormal">43.3 N</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-slate-500">P<sub>∥</sub></span>
+                <span class="font-mono font-semibold text-slate-900" id="resParallel">25.0 N</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-slate-500">f<sub>e,máx</sub></span>
+                <span class="font-mono font-semibold text-slate-900" id="resFStatic">17.3 N</span>
+              </div>
+              <div class="flex justify-between items-center text-sm">
+                <span class="text-slate-500">f<sub>c</sub></span>
+                <span class="font-mono font-semibold text-slate-900" id="resFKinetic">13.0 N</span>
+              </div>
+
+              <div class="border-t border-slate-100 pt-3">
+                <div class="flex justify-between items-center text-sm">
+                  <span class="text-slate-500">Aceleración</span>
+                  <span class="font-mono font-bold text-lg" id="resAccel">2.40 m/s²</span>
+                </div>
+              </div>
+
+              <div class="border-t border-slate-100 pt-3">
+                <div class="flex justify-between items-center text-sm">
+                  <span class="text-slate-500">Estado</span>
+                  <span class="font-semibold text-sm px-2.5 py-1 rounded-full" id="resState">Desliza ↓</span>
+                </div>
+              </div>
+
+              <div class="border-t border-slate-100 pt-3">
+                <div class="flex justify-between items-center text-sm">
+                  <span class="text-slate-500">θ crítico</span>
+                  <span class="font-mono font-semibold text-slate-900" id="resCritAngle">21.8°</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones -->
+          <div class="flex gap-3">
+            <button id="btnStart" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-500 transition-colors shadow-sm">
+              <i data-lucide="play" class="w-4 h-4"></i>
+              Iniciar
+            </button>
+            <button id="btnReset" class="flex items-center justify-center gap-2 px-4 py-3 bg-white text-slate-600 text-sm font-medium rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+              Reset
+            </button>
+          </div>
+
+          <!-- Leyenda -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-slate-900 mb-3">Leyenda de fuerzas</h3>
+            <div class="space-y-2 text-sm">
+              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded bg-red-500 inline-block"></span><span class="text-slate-600">Peso (mg)</span></div>
+              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded bg-blue-500 inline-block"></span><span class="text-slate-600">Normal (N)</span></div>
+              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded bg-orange-500 inline-block"></span><span class="text-slate-600">P<sub>∥</sub> (componente paralela)</span></div>
+              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded bg-green-500 inline-block"></span><span class="text-slate-600">Rozamiento (f)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    // Mobile menu
+    const menuToggle = document.getElementById('menuToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    let menuOpen = false;
+    menuToggle.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      mobileMenu.classList.toggle('open', menuOpen);
+      const icon = menuToggle.querySelector('i');
+      icon.setAttribute('data-lucide', menuOpen ? 'x' : 'menu');
+      lucide.createIcons();
+    });
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        menuOpen = false; mobileMenu.classList.remove('open');
+        const icon = menuToggle.querySelector('i');
+        icon.setAttribute('data-lucide', 'menu');
+        lucide.createIcons();
+      });
+    });
+
+    // =================== SIMULATION ===================
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const G = 10;
+    let angle = 30, mass = 5, muE = 0.40, muC = 0.30;
+    let blockPos = 0.15; // fraction along the slope (0=top, 1=bottom)
+    let velocity = 0;
+    let running = false;
+    let animId = null;
+
+    // Sliders
+    const angleSlider = document.getElementById('angleSlider');
+    const massSlider = document.getElementById('massSlider');
+    const muESlider = document.getElementById('muESlider');
+    const muCSlider = document.getElementById('muCSlider');
+
+    angleSlider.oninput = () => { angle = +angleSlider.value; updateDisplay(); if (!running) draw(); };
+    massSlider.oninput = () => { mass = +massSlider.value; updateDisplay(); if (!running) draw(); };
+    muESlider.oninput = () => { muE = +muESlider.value; if (muE < muC) { muC = muE; muCSlider.value = muC; } updateDisplay(); if (!running) draw(); };
+    muCSlider.oninput = () => { muC = +muCSlider.value; if (muC > muE) { muE = muC; muESlider.value = muE; } updateDisplay(); if (!running) draw(); };
+
+    document.getElementById('btnStart').onclick = () => {
+      if (running) { pauseSim(); } else { startSim(); }
+    };
+    document.getElementById('btnReset').onclick = resetSim;
+
+    function getPhysics() {
+      const rad = angle * Math.PI / 180;
+      const W = mass * G;
+      const N = W * Math.cos(rad);
+      const Ppar = W * Math.sin(rad);
+      const fEMax = muE * N;
+      const fC = muC * N;
+      const critAngle = Math.atan(muE) * 180 / Math.PI;
+
+      let accel = 0, state = '', stateClass = '';
+      if (Ppar <= fEMax) {
+        state = 'En reposo';
+        stateClass = 'bg-slate-100 text-slate-700';
+      } else {
+        accel = (Ppar - fC) / mass;
+        state = 'Desliza ↓';
+        stateClass = 'bg-red-100 text-red-700';
+      }
+
+      return { rad, W, N, Ppar, fEMax, fC, accel, state, stateClass, critAngle };
+    }
+
+    function updateDisplay() {
+      const p = getPhysics();
+      document.getElementById('angleVal').textContent = angle + '°';
+      document.getElementById('massVal').textContent = mass + ' kg';
+      document.getElementById('muEVal').textContent = muE.toFixed(2);
+      document.getElementById('muCVal').textContent = muC.toFixed(2);
+      document.getElementById('resWeight').textContent = p.W.toFixed(1) + ' N';
+      document.getElementById('resNormal').textContent = p.N.toFixed(1) + ' N';
+      document.getElementById('resParallel').textContent = p.Ppar.toFixed(1) + ' N';
+      document.getElementById('resFStatic').textContent = p.fEMax.toFixed(1) + ' N';
+      document.getElementById('resFKinetic').textContent = p.fC.toFixed(1) + ' N';
+      document.getElementById('resAccel').textContent = p.accel.toFixed(2) + ' m/s²';
+      document.getElementById('resCritAngle').textContent = p.critAngle.toFixed(1) + '°';
+      const stateEl = document.getElementById('resState');
+      stateEl.textContent = p.state;
+      stateEl.className = 'font-semibold text-sm px-2.5 py-1 rounded-full ' + p.stateClass;
+    }
+
+    // =================== DRAWING ===================
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width - 24;
+      canvas.height = 500;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', () => { resizeCanvas(); draw(); });
+
+    function draw() {
+      const W = canvas.width, H = canvas.height;
+      const p = getPhysics();
+      const rad = p.rad;
+
+      ctx.clearRect(0, 0, W, H);
+
+      // Background
+      ctx.fillStyle = '#F8FAFC';
+      ctx.fillRect(0, 0, W, H);
+
+      // Ground
+      const groundY = H - 50;
+      ctx.fillStyle = '#E2E8F0';
+      ctx.fillRect(0, groundY, W, H - groundY);
+      ctx.strokeStyle = '#CBD5E1';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
+
+      // Triangle
+      const baseLen = Math.min(W * 0.65, 450);
+      const heightLen = baseLen * Math.tan(rad);
+      const clampedHeight = Math.min(heightLen, groundY - 60);
+      const actualBase = rad > 0 ? clampedHeight / Math.tan(rad) : baseLen;
+
+      const triRight = W * 0.18 + actualBase;
+      const triTopY = groundY - clampedHeight;
+      const triLeft = W * 0.18;
+
+      // Fill triangle
+      ctx.fillStyle = '#EEF2FF';
+      ctx.beginPath();
+      ctx.moveTo(triLeft, groundY);
+      ctx.lineTo(triRight, groundY);
+      ctx.lineTo(triLeft, triTopY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Triangle outline
+      ctx.strokeStyle = '#A5B4FC';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(triLeft, groundY);
+      ctx.lineTo(triRight, groundY);
+      ctx.lineTo(triLeft, triTopY);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Angle arc
+      if (rad > 0.02) {
+        ctx.strokeStyle = '#4F46E5';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(triRight, groundY, 40, Math.PI, Math.PI + rad, true);
+        ctx.stroke();
+        // Angle label
+        const labelAngle = Math.PI + rad / 2;
+        ctx.fillStyle = '#4F46E5';
+        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.fillText(angle + '°', triRight + 46 * Math.cos(labelAngle) - 8, groundY + 46 * Math.sin(labelAngle) + 4);
+      }
+
+      // Block on the slope
+      const slopeLen = Math.sqrt(actualBase * actualBase + clampedHeight * clampedHeight);
+      const blockSize = 36;
+
+      // Position along slope: blockPos 0=top, 1=bottom
+      const bx = triLeft + (1 - blockPos) * actualBase;
+      const by = triTopY + (1 - blockPos) * clampedHeight;
+
+      // Block corners (rotated square)
+      const cosA = Math.cos(rad);
+      const sinA = Math.sin(rad);
+      const nx = sinA; // normal direction x (pointing away from slope)
+      const ny = -cosA; // normal direction y
+      const tx = cosA; // tangent direction x (down the slope)
+      const ty = sinA; // tangent direction y
+
+      // Block center offset from slope surface
+      const cx = bx + nx * blockSize / 2;
+      const cy = by + ny * blockSize / 2;
+
+      // Draw block
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(rad);
+      ctx.fillStyle = '#4F46E5';
+      ctx.shadowColor = 'rgba(79,70,229,0.3)';
+      ctx.shadowBlur = 12;
+      ctx.fillRect(-blockSize / 2, -blockSize / 2, blockSize, blockSize);
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#3730A3';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(-blockSize / 2, -blockSize / 2, blockSize, blockSize);
+      // Mass label
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(mass + 'kg', 0, 0);
+      ctx.restore();
+
+      // Force scale
+      const forceScale = slopeLen > 100 ? 1.8 : 1.2;
+
+      // Weight (straight down from center)
+      drawArrow(cx, cy, cx, cy + p.W * forceScale, '#EF4444', 2.5);
+      ctx.fillStyle = '#EF4444';
+      ctx.font = 'bold 12px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('mg=' + p.W.toFixed(1) + 'N', cx + 6, cy + p.W * forceScale + 4);
+
+      // Normal (perpendicular to slope, away from surface)
+      const nLen = p.N * forceScale;
+      drawArrow(cx, cy, cx + nx * nLen, cy + ny * nLen, '#3B82F6', 2.5);
+      ctx.fillStyle = '#3B82F6';
+      ctx.fillText('N=' + p.N.toFixed(1) + 'N', cx + nx * nLen + 6, cy + ny * nLen);
+
+      // P_parallel (down the slope)
+      const pParLen = p.Ppar * forceScale;
+      drawArrow(cx, cy, cx + tx * pParLen, cy + ty * pParLen, '#F97316', 2.5);
+      ctx.fillStyle = '#F97316';
+      ctx.font = 'bold 11px Inter, sans-serif';
+      ctx.fillText('P∥=' + p.Ppar.toFixed(1) + 'N', cx + tx * pParLen + 4, cy + ty * pParLen + 14);
+
+      // Friction (up the slope, only if block is sliding or at rest with force applied)
+      const fLen = p.state === 'En reposo' ? Math.min(p.Ppar, p.fEMax) * forceScale : p.fC * forceScale;
+      if (fLen > 2) {
+        drawArrow(cx, cy, cx - tx * fLen, cy - ty * fLen, '#22C55E', 2.5);
+        ctx.fillStyle = '#22C55E';
+        const fLabel = p.state === 'En reposo' ? 'fe=' + Math.min(p.Ppar, p.fEMax).toFixed(1) + 'N' : 'fc=' + p.fC.toFixed(1) + 'N';
+        ctx.fillText(fLabel, cx - tx * fLen - 50, cy - ty * fLen - 8);
+      }
+
+      // Dashed lines for weight decomposition
+      if (rad > 0.05) {
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = '#94A3B8';
+        ctx.lineWidth = 1;
+        // P_parallel component line
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + p.W * forceScale);
+        ctx.lineTo(cx + tx * pParLen, cy + ty * pParLen);
+        ctx.stroke();
+        // Normal component line
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + p.W * forceScale);
+        ctx.lineTo(cx + nx * nLen, cy + ny * nLen);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Status text at top
+      ctx.fillStyle = '#1E293B';
+      ctx.font = 'bold 14px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Plano Inclinado — θ = ' + angle + '°', 16, 28);
+
+      if (running) {
+        ctx.fillStyle = '#4F46E5';
+        ctx.font = '12px Inter, sans-serif';
+        ctx.fillText('v = ' + velocity.toFixed(2) + ' m/s', 16, 48);
+      }
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, width) {
+      const headLen = 10;
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const angle = Math.atan2(dy, dx);
+
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // =================== ANIMATION ===================
+    function startSim() {
+      const p = getPhysics();
+      if (p.state === 'En reposo') return;
+
+      running = true;
+      const btn = document.getElementById('btnStart');
+      btn.innerHTML = '<i data-lucide="pause" class="w-4 h-4"></i> Pausar';
+      lucide.createIcons();
+
+      // Disable sliders
+      angleSlider.disabled = true;
+      massSlider.disabled = true;
+      muESlider.disabled = true;
+      muCSlider.disabled = true;
+
+      let lastTime = null;
+      function step(timestamp) {
+        if (!running) return;
+        if (!lastTime) lastTime = timestamp;
+        const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+        lastTime = timestamp;
+
+        const phys = getPhysics();
+        velocity += phys.accel * dt;
+        blockPos += (velocity * dt) / 5; // scale for visual
+
+        if (blockPos >= 0.95) {
+          blockPos = 0.95;
+          pauseSim();
+        }
+
+        draw();
+        animId = requestAnimationFrame(step);
+      }
+      animId = requestAnimationFrame(step);
+    }
+
+    function pauseSim() {
+      running = false;
+      if (animId) cancelAnimationFrame(animId);
+      const btn = document.getElementById('btnStart');
+      btn.innerHTML = '<i data-lucide="play" class="w-4 h-4"></i> Iniciar';
+      lucide.createIcons();
+      angleSlider.disabled = false;
+      massSlider.disabled = false;
+      muESlider.disabled = false;
+      muCSlider.disabled = false;
+    }
+
+    function resetSim() {
+      pauseSim();
+      blockPos = 0.15;
+      velocity = 0;
+      draw();
+    }
+
+    // Init
+    updateDisplay();
+    draw();
+  </script>
+</body>
+</html>
