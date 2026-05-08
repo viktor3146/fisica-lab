@@ -1,224 +1,408 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Plano Inclinado — FísicaLab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    * { font-family: 'Inter', sans-serif; }
-    ::selection { background: #E0E7FF; color: #3730A3; }
-    html { scroll-behavior: smooth; }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #fff; }
-    ::-webkit-scrollbar-thumb { background: #C7D2FE; border-radius: 99px; }
-    .mobile-menu { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
-    .mobile-menu.open { max-height: 500px; }
-    .nav-link { position: relative; }
+    :root {
+      --bg: #0a0d12;
+      --bg-secondary: #12171f;
+      --fg: #e8eaed;
+      --muted: #6b7280;
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.4);
+      --card: #1a1f2a;
+      --border: #2a3140;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .title-font {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .glass-panel {
+      background: linear-gradient(135deg, rgba(26, 31, 42, 0.9), rgba(18, 23, 31, 0.95));
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .control-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      background: linear-gradient(90deg, var(--border), #3d4452);
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .control-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      background: linear-gradient(145deg, var(--accent), #d97706);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 16px var(--accent-glow), 0 4px 8px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .control-input::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 24px var(--accent-glow), 0 6px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .control-input::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      background: linear-gradient(145deg, var(--accent), #d97706);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .control-input:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(145deg, var(--accent), #d97706);
+      color: #000;
+      font-weight: 600;
+      padding: 10px 24px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.75rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--fg);
+      font-weight: 500;
+      padding: 10px 24px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.8rem;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .value-display {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    .stat-card {
+      background: linear-gradient(145deg, rgba(42, 49, 64, 0.5), rgba(26, 31, 42, 0.8));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      border-radius: 16px;
+    }
+
+    .background-grid {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(245, 158, 11, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245, 158, 11, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .ambient-glow {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      filter: blur(150px);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .ambient-glow-1 {
+      top: -200px;
+      right: -200px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.12), transparent 70%);
+    }
+
+    .ambient-glow-2 {
+      bottom: -200px;
+      left: -200px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%);
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .fade-in-delay-1 { animation-delay: 0.1s; }
+    .fade-in-delay-2 { animation-delay: 0.2s; }
+    .fade-in-delay-3 { animation-delay: 0.3s; }
+
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .nav-link {
+      position: relative;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .nav-link:hover, .nav-link.active { color: var(--accent); }
     .nav-link::after {
-      content: ''; position: absolute; bottom: -2px; left: 0;
-      width: 0; height: 2px; background: #4F46E5;
-      border-radius: 99px; transition: width 0.25s ease;
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0;
+      width: 0; height: 2px;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.25s ease;
     }
     .nav-link:hover::after, .nav-link.active::after { width: 100%; }
 
-    canvas { display: block; width: 100%; border-radius: 16px; }
-
-    input[type="range"] {
-      -webkit-appearance: none; appearance: none;
-      height: 6px; border-radius: 99px; background: #E2E8F0;
-      outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none; appearance: none;
-      width: 18px; height: 18px; border-radius: 50%;
-      background: #4F46E5; cursor: pointer; border: 2px solid white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
+    .mobile-menu { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+    .mobile-menu.open { max-height: 400px; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+
+<body>
+  <div class="background-grid"></div>
+  <div class="ambient-glow ambient-glow-1"></div>
+  <div class="ambient-glow ambient-glow-2"></div>
 
   <!-- TOP BAR -->
-  <div class="bg-slate-900 text-white text-xs py-1.5 px-4 sm:px-6">
+  <div style="background: var(--bg-secondary); border-bottom: 1px solid var(--border);" class="text-xs py-1.5 px-4 sm:px-6">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <span class="text-slate-400">Simulación interactiva</span>
-      <a href="index.html" class="hover:text-indigo-300 transition-colors">← Volver al sitio</a>
+      <span style="color: var(--muted);">Simulacion interactiva</span>
+      <a href="index.html" class="hover:text-amber-400 transition-colors" style="color: var(--muted);">← Volver al sitio</a>
     </div>
   </div>
 
   <!-- HEADER -->
-  <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
+  <header class="sticky top-0 z-50" style="background: rgba(10,13,18,0.92); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border);">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
-      <div class="flex items-center justify-between h-16">
+      <div class="flex items-center justify-between h-14">
         <a href="index.html" class="flex items-center gap-2.5 group">
-          <div class="w-9 h-9 bg-indigo-600 rounded-lg flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
-            <i data-lucide="atom" class="w-5 h-5 text-white"></i>
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(145deg, var(--accent), #d97706);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10M1 12h6m6 0h10"/></svg>
           </div>
-          <span class="text-lg font-semibold text-slate-900 tracking-tight">FísicaLab</span>
+          <span class="title-font text-sm font-bold tracking-wider" style="color: var(--fg);">FisicaLab</span>
         </a>
         <nav class="hidden md:flex items-center gap-1">
-          <a href="index.html" class="nav-link px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-slate-50">Inicio</a>
-          <a href="cinematica.html" class="nav-link px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-slate-50">Cinemática</a>
-          <a href="dinamica.html" class="nav-link active px-3 py-2 text-sm font-medium text-slate-900 hover:text-indigo-600 rounded-lg hover:bg-slate-50">Dinámica</a>
-          <a href="maquina-atwood.html" class="nav-link px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 rounded-lg hover:bg-slate-50 flex items-center gap-1.5">
-            Máquina de Atwood <i data-lucide="external-link" class="w-3 h-3"></i>
-          </a>
+          <a href="index.html" class="nav-link px-3 py-2 text-sm font-medium rounded-lg">Inicio</a>
+          <a href="cinematica.html" class="nav-link px-3 py-2 text-sm font-medium rounded-lg">Cinematica</a>
+          <a href="dinamica.html" class="nav-link active px-3 py-2 text-sm font-medium rounded-lg">Dinamica</a>
+          <a href="maquina-atwood.html" class="nav-link px-3 py-2 text-sm font-medium rounded-lg flex items-center gap-1.5">Maquina de Atwood <span class="text-xs">↗</span></a>
         </nav>
-        <button id="menuToggle" class="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors">
-          <i data-lucide="menu" class="w-5 h-5 text-slate-700"></i>
+        <button id="menuToggle" class="md:hidden p-2 rounded-lg" style="color: var(--fg);">
+          <svg id="menuIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
       </div>
-      <div id="mobileMenu" class="mobile-menu md:hidden border-t border-slate-100">
+      <div id="mobileMenu" class="mobile-menu md:hidden" style="border-top: 1px solid var(--border);">
         <nav class="py-3 space-y-1">
-          <a href="index.html" class="block px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg">Inicio</a>
-          <a href="cinematica.html" class="block px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg">Cinemática</a>
-          <a href="dinamica.html" class="block px-3 py-2.5 text-sm font-medium text-slate-900 hover:bg-slate-50 rounded-lg">Dinámica</a>
-          <a href="maquina-atwood.html" class="block px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-50 rounded-lg">Máquina de Atwood →</a>
+          <a href="index.html" class="block px-3 py-2.5 text-sm font-medium rounded-lg" style="color: var(--muted);">Inicio</a>
+          <a href="cinematica.html" class="block px-3 py-2.5 text-sm font-medium rounded-lg" style="color: var(--muted);">Cinematica</a>
+          <a href="dinamica.html" class="block px-3 py-2.5 text-sm font-medium rounded-lg" style="color: var(--accent);">Dinamica</a>
+          <a href="maquina-atwood.html" class="block px-3 py-2.5 text-sm font-medium rounded-lg" style="color: var(--muted);">Maquina de Atwood →</a>
         </nav>
       </div>
     </div>
   </header>
 
   <!-- BREADCRUMB -->
-  <div class="bg-white border-b border-slate-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5">
-      <div class="flex items-center text-xs text-slate-400">
-        <span class="after:content-['/'] after:mx-2"><a href="index.html" class="hover:text-indigo-600 transition-colors">FísicaLab</a></span>
-        <span class="after:content-['/'] after:mx-2"><a href="dinamica.html" class="hover:text-indigo-600 transition-colors">Dinámica</a></span>
-        <span class="text-slate-700 font-medium">Plano Inclinado</span>
+  <div style="background: var(--bg); border-bottom: 1px solid var(--border);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2">
+      <div class="flex items-center text-xs" style="color: var(--muted);">
+        <span class="after:content-['/'] after:mx-2"><a href="index.html" class="hover:text-amber-400 transition-colors">FisicaLab</a></span>
+        <span class="after:content-['/'] after:mx-2"><a href="dinamica.html" class="hover:text-amber-400 transition-colors">Dinamica</a></span>
+        <span style="color: var(--fg); font-weight: 500;">Plano Inclinado</span>
       </div>
     </div>
   </div>
 
   <!-- SIMULATION -->
-  <main class="bg-slate-50 py-8 lg:py-12">
+  <main class="py-6 lg:py-10">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
       <!-- Title -->
-      <div class="mb-8">
-        <h1 class="text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight">Plano Inclinado</h1>
-        <p class="text-slate-500 mt-2">Ajustá los parámetros y observá cómo cambian las fuerzas y el movimiento del bloque.</p>
+      <div class="mb-8 fade-in">
+        <h1 class="title-font text-2xl md:text-4xl font-black tracking-wider" style="color: var(--fg);">PLANO INCLINADO</h1>
+        <p class="mt-2" style="color: var(--muted);">Ajusta los parametros y observa como cambian las fuerzas y el movimiento del bloque.</p>
       </div>
 
-      <div class="grid lg:grid-cols-[1fr_340px] gap-6">
-        <!-- Canvas -->
-        <div class="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
-          <canvas id="simCanvas" height="500"></canvas>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- CONTROLES -->
+        <div class="glass-panel p-6 fade-in fade-in-delay-1">
+          <h2 class="title-font text-lg font-bold mb-5 flex items-center gap-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v10M1 12h6m6 0h10"/></svg>
+            Controles
+          </h2>
+
+          <div class="space-y-6">
+            <!-- Angulo -->
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="font-medium text-sm" style="color: var(--fg);">Angulo (θ)</label>
+                <span id="angleVal" class="value-display">30°</span>
+              </div>
+              <input type="range" id="angleSlider" min="0" max="80" value="30" class="control-input">
+            </div>
+
+            <!-- Botones -->
+            <div class="flex gap-3">
+              <button id="btnStart" class="btn-primary flex-1">Iniciar</button>
+              <button id="btnReset" class="btn-secondary flex-1">Reset</button>
+            </div>
+
+            <!-- Masa -->
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="font-medium text-sm" style="color: var(--fg);">Masa (m)</label>
+                <span id="massVal" class="value-display">5 kg</span>
+              </div>
+              <input type="range" id="massSlider" min="1" max="20" value="5" step="0.5" class="control-input">
+            </div>
+
+            <!-- Mu estatico -->
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="font-medium text-sm" style="color: var(--fg);">μ<sub>e</sub> (estatico)</label>
+                <span id="muEVal" class="value-display">0.40</span>
+              </div>
+              <input type="range" id="muESlider" min="0" max="1.5" value="0.40" step="0.01" class="control-input">
+            </div>
+
+            <!-- Mu cinetico -->
+            <div>
+              <div class="flex justify-between items-center mb-2">
+                <label class="font-medium text-sm" style="color: var(--fg);">μ<sub>c</sub> (cinetico)</label>
+                <span id="muCVal" class="value-display">0.30</span>
+              </div>
+              <input type="range" id="muCSlider" min="0" max="1.5" value="0.30" step="0.01" class="control-input">
+            </div>
+          </div>
         </div>
 
-        <!-- Controls -->
-        <div class="space-y-4">
-          <!-- Controles -->
-          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 class="text-sm font-semibold text-slate-900 mb-4">Parámetros</h3>
-
-            <div class="space-y-5">
-              <div>
-                <div class="flex justify-between text-sm mb-1.5">
-                  <span class="text-slate-600">Ángulo (θ)</span>
-                  <span class="font-mono font-semibold text-slate-900" id="angleVal">30°</span>
-                </div>
-                <input type="range" id="angleSlider" min="0" max="80" value="30" class="w-full">
-              </div>
-
-               <!-- Botones -->
-          <div class="flex gap-3">
-            <button id="btnStart" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-500 transition-colors shadow-sm">
-              <i data-lucide="play" class="w-4 h-4"></i>
-              Iniciar
-            </button>
-            <button id="btnReset" class="flex items-center justify-center gap-2 px-4 py-3 bg-white text-slate-600 text-sm font-medium rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
-              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-              Reset
-            </button>
+        <!-- CANVAS -->
+        <div class="lg:col-span-1 fade-in fade-in-delay-2">
+          <div class="glass-panel p-4">
+            <canvas id="simCanvas" height="520"></canvas>
           </div>
+        </div>
 
-              <div>
-                <div class="flex justify-between text-sm mb-1.5">
-                  <span class="text-slate-600">Masa (m)</span>
-                  <span class="font-mono font-semibold text-slate-900" id="massVal">5 kg</span>
-                </div>
-                <input type="range" id="massSlider" min="1" max="20" value="5" step="0.5" class="w-full">
-              </div>
+        <!-- RESULTADOS -->
+        <div class="glass-panel p-6 fade-in fade-in-delay-3">
+          <h2 class="title-font text-lg font-bold mb-5 flex items-center gap-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Resultados
+          </h2>
 
-              <div>
-                <div class="flex justify-between text-sm mb-1.5">
-                  <span class="text-slate-600">μ<sub>e</sub> (estático)</span>
-                  <span class="font-mono font-semibold text-slate-900" id="muEVal">0.40</span>
-                </div>
-                <input type="range" id="muESlider" min="0" max="1.5" value="0.40" step="0.01" class="w-full">
-              </div>
+          <div class="space-y-3">
+            <div class="stat-card">
+              <p class="text-xs mb-0.5" style="color: var(--muted);">Peso</p>
+              <p id="resWeight" class="title-font text-xl font-bold" style="color: var(--accent);">50.0 N</p>
+            </div>
+            <div class="stat-card">
+              <p class="text-xs mb-0.5" style="color: var(--muted);">Normal</p>
+              <p id="resNormal" class="title-font text-xl font-bold" style="color: var(--accent);">43.3 N</p>
+            </div>
+            <div class="stat-card">
+              <p class="text-xs mb-0.5" style="color: var(--muted);">P<sub>∥</sub></p>
+              <p id="resParallel" class="title-font text-xl font-bold" style="color: var(--accent);">25.0 N</p>
+            </div>
+            <div class="stat-card">
+              <p class="text-xs mb-0.5" style="color: var(--muted);">f<sub>e,max</sub></p>
+              <p id="resFStatic" class="title-font text-xl font-bold" style="color: var(--accent);">17.3 N</p>
+            </div>
+            <div class="stat-card">
+              <p class="text-xs mb-0.5" style="color: var(--muted);">f<sub>c</sub></p>
+              <p id="resFKinetic" class="title-font text-xl font-bold" style="color: var(--accent);">13.0 N</p>
+            </div>
 
-              <div>
-                <div class="flex justify-between text-sm mb-1.5">
-                  <span class="text-slate-600">μ<sub>c</sub> (cinético)</span>
-                  <span class="font-mono font-semibold text-slate-900" id="muCVal">0.30</span>
-                </div>
-                <input type="range" id="muCSlider" min="0" max="1.5" value="0.30" step="0.01" class="w-full">
+            <div style="border-top: 1px solid var(--border);" class="pt-3">
+              <div class="stat-card">
+                <p class="text-xs mb-0.5" style="color: var(--muted);">Aceleracion</p>
+                <p id="resAccel" class="title-font text-2xl font-bold" style="color: var(--accent);">2.40 m/s²</p>
               </div>
             </div>
-          </div>
 
-          <!-- Resultados -->
-          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 class="text-sm font-semibold text-slate-900 mb-4">Resultados</h3>
-            <div class="space-y-3">
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500">Peso</span>
-                <span class="font-mono font-semibold text-slate-900" id="resWeight">50.0 N</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500">Normal</span>
-                <span class="font-mono font-semibold text-slate-900" id="resNormal">43.3 N</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500">P<sub>∥</sub></span>
-                <span class="font-mono font-semibold text-slate-900" id="resParallel">25.0 N</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500">f<sub>e,máx</sub></span>
-                <span class="font-mono font-semibold text-slate-900" id="resFStatic">17.3 N</span>
-              </div>
-              <div class="flex justify-between items-center text-sm">
-                <span class="text-slate-500">f<sub>c</sub></span>
-                <span class="font-mono font-semibold text-slate-900" id="resFKinetic">13.0 N</span>
-              </div>
+            <div class="stat-card">
+              <p class="text-xs mb-1" style="color: var(--muted);">Estado</p>
+              <p id="resState" class="title-font text-sm font-bold" style="color: var(--accent);">Desliza ↓</p>
+            </div>
 
-              <div class="border-t border-slate-100 pt-3">
-                <div class="flex justify-between items-center text-sm">
-                  <span class="text-slate-500">Aceleración</span>
-                  <span class="font-mono font-bold text-lg" id="resAccel">2.40 m/s²</span>
-                </div>
-              </div>
-
-              <div class="border-t border-slate-100 pt-3">
-                <div class="flex justify-between items-center text-sm">
-                  <span class="text-slate-500">Estado</span>
-                  <span class="font-semibold text-sm px-2.5 py-1 rounded-full" id="resState">Desliza ↓</span>
-                </div>
-              </div>
-
-              <div class="border-t border-slate-100 pt-3">
-                <div class="flex justify-between items-center text-sm">
-                  <span class="text-slate-500">θ crítico</span>
-                  <span class="font-mono font-semibold text-slate-900" id="resCritAngle">21.8°</span>
-                </div>
-              </div>
+            <div class="stat-card">
+              <p class="text-xs mb-0.5" style="color: var(--muted);">θ critico</p>
+              <p id="resCritAngle" class="title-font text-xl font-bold" style="color: var(--accent);">21.8°</p>
             </div>
           </div>
-
-         
 
           <!-- Leyenda -->
-          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 class="text-sm font-semibold text-slate-900 mb-3">Leyenda de fuerzas</h3>
-            <div class="space-y-2 text-sm">
-              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded bg-red-500 inline-block"></span><span class="text-slate-600">Peso (mg)</span></div>
-              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded bg-blue-500 inline-block"></span><span class="text-slate-600">Normal (N)</span></div>
-              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded bg-orange-500 inline-block"></span><span class="text-slate-600">P<sub>∥</sub> (componente paralela)</span></div>
-              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded bg-green-500 inline-block"></span><span class="text-slate-600">Rozamiento (f)</span></div>
+          <div class="mt-6 p-4 rounded-xl" style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.15);">
+            <h3 class="title-font text-xs font-bold mb-3" style="color: var(--accent);">LEYENDA DE FUERZAS</h3>
+            <div class="space-y-2 text-sm" style="color: var(--muted);">
+              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded inline-block" style="background: #EF4444;"></span><span>Peso (mg)</span></div>
+              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded inline-block" style="background: #3B82F6;"></span><span>Normal (N)</span></div>
+              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded inline-block" style="background: #F97316;"></span><span>P<sub>∥</sub> (componente paralela)</span></div>
+              <div class="flex items-center gap-2"><span class="w-4 h-1 rounded inline-block" style="background: #22C55E;"></span><span>Rozamiento (f)</span></div>
             </div>
           </div>
         </div>
@@ -227,40 +411,36 @@
   </main>
 
   <script>
-    lucide.createIcons();
-
-    // Mobile menu
+    // ============ MOBILE MENU ============
     const menuToggle = document.getElementById('menuToggle');
     const mobileMenu = document.getElementById('mobileMenu');
+    const menuIcon = document.getElementById('menuIcon');
     let menuOpen = false;
     menuToggle.addEventListener('click', () => {
       menuOpen = !menuOpen;
       mobileMenu.classList.toggle('open', menuOpen);
-      const icon = menuToggle.querySelector('i');
-      icon.setAttribute('data-lucide', menuOpen ? 'x' : 'menu');
-      lucide.createIcons();
+      menuIcon.innerHTML = menuOpen
+        ? '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'
+        : '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>';
     });
     mobileMenu.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => {
         menuOpen = false; mobileMenu.classList.remove('open');
-        const icon = menuToggle.querySelector('i');
-        icon.setAttribute('data-lucide', 'menu');
-        lucide.createIcons();
+        menuIcon.innerHTML = '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>';
       });
     });
 
-    // =================== SIMULATION ===================
+    // ============ SIMULATION ============
     const canvas = document.getElementById('simCanvas');
     const ctx = canvas.getContext('2d');
 
     const G = 10;
     let angle = 30, mass = 5, muE = 0.40, muC = 0.30;
-    let blockPos = 0.15; // fraction along the slope (0=top, 1=bottom)
+    let blockPos = 0.15;
     let velocity = 0;
     let running = false;
     let animId = null;
 
-    // Sliders
     const angleSlider = document.getElementById('angleSlider');
     const massSlider = document.getElementById('massSlider');
     const muESlider = document.getElementById('muESlider');
@@ -285,17 +465,17 @@
       const fC = muC * N;
       const critAngle = Math.atan(muE) * 180 / Math.PI;
 
-      let accel = 0, state = '', stateClass = '';
+      let accel = 0, state = '', stateColor = '';
       if (Ppar <= fEMax) {
         state = 'En reposo';
-        stateClass = 'bg-slate-100 text-slate-700';
+        stateColor = '#6b7280';
       } else {
         accel = (Ppar - fC) / mass;
         state = 'Desliza ↓';
-        stateClass = 'bg-red-100 text-red-700';
+        stateColor = '#EF4444';
       }
 
-      return { rad, W, N, Ppar, fEMax, fC, accel, state, stateClass, critAngle };
+      return { rad, W, N, Ppar, fEMax, fC, accel, state, stateColor, critAngle };
     }
 
     function updateDisplay() {
@@ -313,180 +493,36 @@
       document.getElementById('resCritAngle').textContent = p.critAngle.toFixed(1) + '°';
       const stateEl = document.getElementById('resState');
       stateEl.textContent = p.state;
-      stateEl.className = 'font-semibold text-sm px-2.5 py-1 rounded-full ' + p.stateClass;
+      stateEl.style.color = p.stateColor;
     }
 
-    // =================== DRAWING ===================
+    // ============ CANVAS RESIZE ============
     function resizeCanvas() {
       const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width - 24;
-      canvas.height = 500;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = (rect.width - 32) * dpr;
+      canvas.height = 520 * dpr;
+      canvas.style.height = '520px';
+      ctx.scale(dpr, dpr);
     }
     resizeCanvas();
     window.addEventListener('resize', () => { resizeCanvas(); draw(); });
 
-    function draw() {
-      const W = canvas.width, H = canvas.height;
-      const p = getPhysics();
-      const rad = p.rad;
+    // ============ DRAWING ============
+    function drawBackground(w, h) {
+      const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+      bgGrad.addColorStop(0, '#0f1318');
+      bgGrad.addColorStop(1, '#0a0d12');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
 
-      ctx.clearRect(0, 0, W, H);
-
-      // Background
-      ctx.fillStyle = '#F8FAFC';
-      ctx.fillRect(0, 0, W, H);
-
-      // Ground
-      const groundY = H - 50;
-      ctx.fillStyle = '#E2E8F0';
-      ctx.fillRect(0, groundY, W, H - groundY);
-      ctx.strokeStyle = '#CBD5E1';
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.04)';
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
-
-      // Triangle
-      const baseLen = Math.min(W * 0.65, 450);
-      const heightLen = baseLen * Math.tan(rad);
-      const clampedHeight = Math.min(heightLen, groundY - 60);
-      const actualBase = rad > 0 ? clampedHeight / Math.tan(rad) : baseLen;
-
-      const triRight = W * 0.18 + actualBase;
-      const triTopY = groundY - clampedHeight;
-      const triLeft = W * 0.18;
-
-      // Fill triangle
-      ctx.fillStyle = '#EEF2FF';
-      ctx.beginPath();
-      ctx.moveTo(triLeft, groundY);
-      ctx.lineTo(triRight, groundY);
-      ctx.lineTo(triLeft, triTopY);
-      ctx.closePath();
-      ctx.fill();
-
-      // Triangle outline
-      ctx.strokeStyle = '#A5B4FC';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(triLeft, groundY);
-      ctx.lineTo(triRight, groundY);
-      ctx.lineTo(triLeft, triTopY);
-      ctx.closePath();
-      ctx.stroke();
-
-      // Angle arc
-      if (rad > 0.02) {
-        ctx.strokeStyle = '#4F46E5';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(triRight, groundY, 40, Math.PI, Math.PI + rad, true);
-        ctx.stroke();
-        // Angle label
-        const labelAngle = Math.PI + rad / 2;
-        ctx.fillStyle = '#4F46E5';
-        ctx.font = 'bold 13px Inter, sans-serif';
-        ctx.fillText(angle + '°', triRight + 46 * Math.cos(labelAngle) - 8, groundY + 46 * Math.sin(labelAngle) + 4);
+      for (let x = 0; x < w; x += 30) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
       }
-
-      // Block on the slope
-      const slopeLen = Math.sqrt(actualBase * actualBase + clampedHeight * clampedHeight);
-      const blockSize = 24 + mass * 1.2;
-
-      // Position along slope: blockPos 0=top, 1=bottom
-      const bx = triLeft + (blockPos) * actualBase;
-      const by = triTopY + (blockPos) * clampedHeight;
-
-      // Block corners (rotated square)
-      const cosA = Math.cos(rad);
-      const sinA = Math.sin(rad);
-      const nx = sinA; // normal direction x (pointing away from slope)
-      const ny = -cosA; // normal direction y
-      const tx = cosA; // tangent direction x (down the slope)
-      const ty = sinA; // tangent direction y
-
-      // Block center offset from slope surface
-      const cx = bx + nx * blockSize / 2;
-      const cy = by + ny * blockSize / 2;
-
-      // Draw block
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(rad);
-      ctx.fillStyle = '#4F46E5';
-      ctx.shadowColor = 'rgba(79,70,229,0.3)';
-      ctx.shadowBlur = 12;
-      ctx.fillRect(-blockSize / 2, -blockSize / 2, blockSize, blockSize);
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = '#3730A3';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(-blockSize / 2, -blockSize / 2, blockSize, blockSize);
-      // Mass label
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 11px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(mass + 'kg', 0, 0);
-      ctx.restore();
-
-      // Force scale
-      const forceScale = slopeLen > 100 ? 1.8 : 1.2;
-
-      // Weight (straight down from center)
-      drawArrow(cx, cy, cx, cy + p.W * forceScale, '#EF4444', 2.5);
-      ctx.fillStyle = '#EF4444';
-      ctx.font = 'bold 12px Inter, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('mg=' + p.W.toFixed(1) + 'N', cx + 6, cy + p.W * forceScale + 4);
-
-      // Normal (perpendicular to slope, away from surface)
-      const nLen = p.N * forceScale;
-      drawArrow(cx, cy, cx + nx * nLen, cy + ny * nLen, '#3B82F6', 2.5);
-      ctx.fillStyle = '#3B82F6';
-      ctx.fillText('N=' + p.N.toFixed(1) + 'N', cx + nx * nLen + 6, cy + ny * nLen);
-
-      // P_parallel (down the slope)
-      const pParLen = p.Ppar * forceScale;
-      drawArrow(cx, cy, cx + tx * pParLen, cy + ty * pParLen, '#F97316', 2.5);
-      ctx.fillStyle = '#F97316';
-      ctx.font = 'bold 11px Inter, sans-serif';
-      ctx.fillText('P∥=' + p.Ppar.toFixed(1) + 'N', cx + tx * pParLen + 4, cy + ty * pParLen + 14);
-
-      // Friction (up the slope, only if block is sliding or at rest with force applied)
-      const fLen = p.state === 'En reposo' ? Math.min(p.Ppar, p.fEMax) * forceScale : p.fC * forceScale;
-      if (fLen > 2) {
-        drawArrow(cx, cy, cx - tx * fLen, cy - ty * fLen, '#22C55E', 2.5);
-        ctx.fillStyle = '#22C55E';
-        const fLabel = p.state === 'En reposo' ? 'fe=' + Math.min(p.Ppar, p.fEMax).toFixed(1) + 'N' : 'fc=' + p.fC.toFixed(1) + 'N';
-        ctx.fillText(fLabel, cx - tx * fLen - 50, cy - ty * fLen - 8);
-      }
-
-      // Dashed lines for weight decomposition
-      if (rad > 0.05) {
-        ctx.setLineDash([4, 4]);
-        ctx.strokeStyle = '#94A3B8';
-        ctx.lineWidth = 1;
-        // P_parallel component line
-        ctx.beginPath();
-        ctx.moveTo(cx, cy + p.W * forceScale);
-        ctx.lineTo(cx + tx * pParLen, cy + ty * pParLen);
-        ctx.stroke();
-        // Normal component line
-        ctx.beginPath();
-        ctx.moveTo(cx, cy + p.W * forceScale);
-        ctx.lineTo(cx + nx * nLen, cy + ny * nLen);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
-      // Status text at top
-      ctx.fillStyle = '#1E293B';
-      ctx.font = 'bold 14px Inter, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText('Plano Inclinado — θ = ' + angle + '°', 16, 28);
-
-      if (running) {
-        ctx.fillStyle = '#4F46E5';
-        ctx.font = '12px Inter, sans-serif';
-        ctx.fillText('v = ' + velocity.toFixed(2) + ' m/s', 16, 48);
+      for (let y = 0; y < h; y += 30) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
       }
     }
 
@@ -494,8 +530,12 @@
       const headLen = 10;
       const dx = x2 - x1;
       const dy = y2 - y1;
-      const angle = Math.atan2(dy, dx);
+      const a = Math.atan2(dy, dx);
 
+      // Glow
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
       ctx.strokeStyle = color;
       ctx.fillStyle = color;
       ctx.lineWidth = width;
@@ -508,23 +548,239 @@
 
       ctx.beginPath();
       ctx.moveTo(x2, y2);
-      ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
-      ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a - Math.PI / 6), y2 - headLen * Math.sin(a - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(a + Math.PI / 6), y2 - headLen * Math.sin(a + Math.PI / 6));
       ctx.closePath();
       ctx.fill();
+      ctx.restore();
     }
 
-    // =================== ANIMATION ===================
+    function draw() {
+      const dpr = window.devicePixelRatio || 1;
+      const W = canvas.width / dpr;
+      const H = canvas.height / dpr;
+      const p = getPhysics();
+      const rad = p.rad;
+
+      ctx.save();
+      drawBackground(W, H);
+
+      // Ground
+      const groundY = H - 45;
+      const groundGrad = ctx.createLinearGradient(0, groundY, 0, H);
+      groundGrad.addColorStop(0, '#1a1f2a');
+      groundGrad.addColorStop(1, '#12171f');
+      ctx.fillStyle = groundGrad;
+      ctx.fillRect(0, groundY, W, H - groundY);
+      ctx.strokeStyle = '#2a3140';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
+
+      // Ground hatch marks
+      ctx.strokeStyle = 'rgba(245,158,11,0.08)';
+      ctx.lineWidth = 1;
+      for (let x = 10; x < W; x += 18) {
+        ctx.beginPath();
+        ctx.moveTo(x, groundY);
+        ctx.lineTo(x - 12, groundY + 15);
+        ctx.stroke();
+      }
+
+      // Triangle
+      const baseLen = Math.min(W * 0.65, 420);
+      const heightLen = baseLen * Math.tan(rad);
+      const clampedHeight = Math.min(heightLen, groundY - 60);
+      const actualBase = rad > 0 ? clampedHeight / Math.tan(rad) : baseLen;
+
+      const triRight = W * 0.2 + actualBase;
+      const triTopY = groundY - clampedHeight;
+      const triLeft = W * 0.2;
+
+      // Triangle fill
+      const triGrad = ctx.createLinearGradient(triLeft, triTopY, triRight, groundY);
+      triGrad.addColorStop(0, 'rgba(245, 158, 11, 0.06)');
+      triGrad.addColorStop(1, 'rgba(245, 158, 11, 0.02)');
+      ctx.fillStyle = triGrad;
+      ctx.beginPath();
+      ctx.moveTo(triLeft, groundY);
+      ctx.lineTo(triRight, groundY);
+      ctx.lineTo(triLeft, triTopY);
+      ctx.closePath();
+      ctx.fill();
+
+      // Triangle outline
+      ctx.save();
+      ctx.shadowColor = 'rgba(245, 158, 11, 0.3)';
+      ctx.shadowBlur = 6;
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(triLeft, groundY);
+      ctx.lineTo(triRight, groundY);
+      ctx.lineTo(triLeft, triTopY);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+
+      // Angle arc
+      if (rad > 0.02) {
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2;
+        ctx.save();
+        ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(triRight, groundY, 36, Math.PI, Math.PI + rad, true);
+        ctx.stroke();
+        ctx.restore();
+        const labelAngle = Math.PI + rad / 2;
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = 'bold 13px "Orbitron", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(angle + '°', triRight + 48 * Math.cos(labelAngle), groundY + 48 * Math.sin(labelAngle) + 5);
+      }
+
+      // Block
+      const blockSize = 24 + mass * 1.2;
+      const bx = triLeft + blockPos * actualBase;
+      const by = triTopY + blockPos * clampedHeight;
+      const nx = Math.sin(rad);
+      const ny = -Math.cos(rad);
+      const tx = Math.cos(rad);
+      const ty = Math.sin(rad);
+      const cx = bx + nx * blockSize / 2;
+      const cy = by + ny * blockSize / 2;
+
+      // Block shadow
+      ctx.save();
+      ctx.translate(cx + 4, cy + 4);
+      ctx.rotate(rad);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.beginPath();
+      ctx.roundRect(-blockSize / 2, -blockSize / 2, blockSize, blockSize, 6);
+      ctx.fill();
+      ctx.restore();
+
+      // Block body
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(rad);
+      const blockGrad = ctx.createLinearGradient(-blockSize / 2, -blockSize / 2, blockSize / 2, blockSize / 2);
+      blockGrad.addColorStop(0, '#d97706');
+      blockGrad.addColorStop(0.4, '#f59e0b');
+      blockGrad.addColorStop(0.6, '#f59e0b');
+      blockGrad.addColorStop(1, '#92400e');
+      ctx.fillStyle = blockGrad;
+      ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      ctx.roundRect(-blockSize / 2, -blockSize / 2, blockSize, blockSize, 6);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Block highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+      ctx.beginPath();
+      ctx.roundRect(-blockSize / 2 + 4, -blockSize / 2 + 4, blockSize - 8, blockSize * 0.35, 3);
+      ctx.fill();
+
+      // Block label
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 11px "Orbitron", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(mass + 'kg', 0, 0);
+      ctx.restore();
+
+      // Force scale
+      const slopeLen = Math.sqrt(actualBase * actualBase + clampedHeight * clampedHeight);
+      const forceScale = slopeLen > 100 ? 1.8 : 1.2;
+
+      // Weight (down)
+      drawArrow(cx, cy, cx, cy + p.W * forceScale, '#EF4444', 2.5);
+      ctx.fillStyle = '#EF4444';
+      ctx.font = 'bold 11px "IBM Plex Sans", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('mg=' + p.W.toFixed(1) + 'N', cx + 8, cy + p.W * forceScale + 4);
+
+      // Normal
+      const nLen = p.N * forceScale;
+      drawArrow(cx, cy, cx + nx * nLen, cy + ny * nLen, '#3B82F6', 2.5);
+      ctx.fillStyle = '#3B82F6';
+      ctx.fillText('N=' + p.N.toFixed(1) + 'N', cx + nx * nLen + 8, cy + ny * nLen);
+
+      // P parallel (down slope)
+      const pParLen = p.Ppar * forceScale;
+      drawArrow(cx, cy, cx + tx * pParLen, cy + ty * pParLen, '#F97316', 2.5);
+      ctx.fillStyle = '#F97316';
+      ctx.font = 'bold 10px "IBM Plex Sans", sans-serif';
+      ctx.fillText('P∥=' + p.Ppar.toFixed(1) + 'N', cx + tx * pParLen + 4, cy + ty * pParLen + 14);
+
+      // Friction (up slope)
+      const fLen = p.state === 'En reposo' ? Math.min(p.Ppar, p.fEMax) * forceScale : p.fC * forceScale;
+      if (fLen > 2) {
+        drawArrow(cx, cy, cx - tx * fLen, cy - ty * fLen, '#22C55E', 2.5);
+        ctx.fillStyle = '#22C55E';
+        const fLabel = p.state === 'En reposo' ? 'fe=' + Math.min(p.Ppar, p.fEMax).toFixed(1) + 'N' : 'fc=' + p.fC.toFixed(1) + 'N';
+        ctx.fillText(fLabel, cx - tx * fLen - 55, cy - ty * fLen - 8);
+      }
+
+      // Dashed decomposition lines
+      if (rad > 0.05) {
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + p.W * forceScale);
+        ctx.lineTo(cx + tx * pParLen, cy + ty * pParLen);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx, cy + p.W * forceScale);
+        ctx.lineTo(cx + nx * nLen, cy + ny * nLen);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Velocity arrow on block when running
+      if (running && Math.abs(velocity) > 0.05) {
+        const vArrowLen = Math.min(60, Math.abs(velocity) * 15 + 15);
+        drawArrow(cx, cy, cx + tx * vArrowLen, cy + ty * vArrowLen, '#f59e0b', 3);
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = 'bold 11px "Orbitron", sans-serif';
+        ctx.fillText('v=' + velocity.toFixed(1) + 'm/s', cx + tx * vArrowLen + 8, cy + ty * vArrowLen);
+      }
+
+      // Title
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = 'bold 13px "Orbitron", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('PLANO INCLINADO — θ = ' + angle + '°', 14, 24);
+
+      // Status
+      ctx.font = '11px "IBM Plex Sans", sans-serif';
+      if (running) {
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillText('Simulacion en curso...', 14, 42);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.fillText('Simulacion pausada', 14, 42);
+      }
+
+      ctx.restore();
+    }
+
+    // ============ ANIMATION ============
     function startSim() {
       const p = getPhysics();
       if (p.state === 'En reposo') return;
 
       running = true;
       const btn = document.getElementById('btnStart');
-      btn.innerHTML = '<i data-lucide="pause" class="w-4 h-4"></i> Pausar';
-      lucide.createIcons();
+      btn.textContent = 'Pausar';
 
-      // Disable sliders
       angleSlider.disabled = true;
       massSlider.disabled = true;
       muESlider.disabled = true;
@@ -539,7 +795,7 @@
 
         const phys = getPhysics();
         velocity += phys.accel * dt;
-        blockPos += (velocity * dt) / 5; // scale for visual
+        blockPos += (velocity * dt) / 5;
 
         if (blockPos >= 0.95) {
           blockPos = 0.95;
@@ -555,9 +811,7 @@
     function pauseSim() {
       running = false;
       if (animId) cancelAnimationFrame(animId);
-      const btn = document.getElementById('btnStart');
-      btn.innerHTML = '<i data-lucide="play" class="w-4 h-4"></i> Iniciar';
-      lucide.createIcons();
+      document.getElementById('btnStart').textContent = 'Iniciar';
       angleSlider.disabled = false;
       massSlider.disabled = false;
       muESlider.disabled = false;
@@ -571,7 +825,7 @@
       draw();
     }
 
-    // Init
+    // ============ INIT ============
     updateDisplay();
     draw();
   </script>
