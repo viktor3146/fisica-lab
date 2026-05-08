@@ -387,7 +387,7 @@
 
       // Block on the slope
       const slopeLen = Math.sqrt(actualBase * actualBase + clampedHeight * clampedHeight);
-      const blockSize = 36;
+      const blockSize = 24 + mass * 1.2;
 
       // Position along slope: blockPos 0=top, 1=bottom
       const bx = triLeft + (blockPos) * actualBase;
